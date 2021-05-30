@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.ActivityNotFoundException;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -37,10 +38,13 @@ public class MainActivity extends AppCompatActivity {
     private Switch luz7;
     private Switch luz8;
     private Button btLuces;
+    private Button lucesNinguna;
+    private Button lucesTodas;
     private TextView sensorLuminosidad;
     private TextView cerradura;
     private TextView personaPuerta;
     private Button abrirPuerta;
+
 
     public TextView estadoArduino;
     private BluetoothAdapter btAdapter = null;
@@ -76,6 +80,8 @@ public class MainActivity extends AppCompatActivity {
         this.luz7 = (Switch) findViewById(R.id.luz7);
         this.luz8 = (Switch) findViewById(R.id.luz8);
         this.btLuces = (Button) findViewById(R.id.btLuces);
+        this.lucesNinguna = (Button) findViewById(R.id.lucesNinguna);
+        this.lucesTodas = (Button) findViewById(R.id.lucesTodas);
         this.sensorLuminosidad = (TextView) findViewById(R.id.sensorLuminosidad);
         this.cerradura = (TextView) findViewById(R.id.cerradura);
         this.personaPuerta = (TextView) findViewById(R.id.personaPuerta);
@@ -84,15 +90,35 @@ public class MainActivity extends AppCompatActivity {
         this.btLuces.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                boolean [] luces = obtenerLucesEncendidas();
-                MyConexionBT.write("a");
+                String luces = obtenerLucesEncendidas();
+                //MyConexionBT.write(luces);
             }
         });
 
         this.abrirPuerta.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //abrir puerta
+                String abrirPuerta = "P1";
+                cerradura.setText("Abierta");
+                //MyConexionBT.write(abrirPuerta);
+            }
+        });
+
+        this.lucesNinguna.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String luces = "L00000000";
+                cambiarEstadoCheked(false);
+                //MyConexionBT.write(luces);
+            }
+        });
+
+        this.lucesTodas.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String luces = "L11111111";
+                cambiarEstadoCheked(true);
+                //MyConexionBT.write(luces);
             }
         });
 
@@ -127,16 +153,27 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private boolean[] obtenerLucesEncendidas (){
-        boolean [] luces= new boolean[8];
-        luces[0] = luz1.isChecked()? true : false;
-        luces[1] = luz2.isChecked()? true : false;
-        luces[2] = luz3.isChecked()? true : false;
-        luces[3] = luz4.isChecked()? true : false;
-        luces[4] = luz5.isChecked()? true : false;
-        luces[5] = luz6.isChecked()? true : false;
-        luces[6] = luz7.isChecked()? true : false;
-        luces[7] = luz8.isChecked()? true : false;
+    private void cambiarEstadoCheked(boolean flag) {
+        luz1.setChecked(flag);
+        luz2.setChecked(flag);
+        luz3.setChecked(flag);
+        luz4.setChecked(flag);
+        luz5.setChecked(flag);
+        luz6.setChecked(flag);
+        luz7.setChecked(flag);
+        luz8.setChecked(flag);
+    }
+
+    private String obtenerLucesEncendidas (){
+        String luces = "L";
+        luces = luz1.isChecked()? luces+"1" : luces+"0";
+        luces = luz2.isChecked()? luces+"1" : luces+"0";
+        luces = luz3.isChecked()? luces+"1" : luces+"0";
+        luces = luz4.isChecked()? luces+"1" : luces+"0";
+        luces = luz5.isChecked()? luces+"1" : luces+"0";
+        luces = luz6.isChecked()? luces+"1" : luces+"0";
+        luces = luz7.isChecked()? luces+"1" : luces+"0";
+        luces = luz8.isChecked()? luces+"1" : luces+"0";
         return luces;
     }
 
@@ -214,7 +251,7 @@ public class MainActivity extends AppCompatActivity {
                     bytes = mmInStream.read(buffer);
                     String readMessage = new String(buffer, 0, bytes);
                     // Envia los datos obtenidos hacia el evento via handler
-                    //grabar.setText(readMessage);
+                    grabar.setText(readMessage);
                     bluetoothIn.obtainMessage(handlerState, bytes, -1, readMessage).sendToTarget();
                     //bluetoothIn.obtainMessage();
                 } catch (IOException e) {
@@ -245,6 +282,7 @@ public class MainActivity extends AppCompatActivity {
                             .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                     String strSpeech2Text = speech.get(0);
                     grabar.setText(strSpeech2Text);
+                    procesarVoz(strSpeech2Text);
                 }
                 break;
             default:
@@ -264,6 +302,92 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(getApplicationContext(),
                     "Tú dispositivo no soporta el reconocimiento por voz",
                     Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void procesarVoz(String comandoVoz){
+        if (comandoVoz.equals("encender todas las luces") || comandoVoz.equals("Encender todas las luces")) {
+            String luces = "L11111111";
+            cambiarEstadoCheked(true);
+            //Log.d("mensaje", "todas las luces");
+            //MyConexionBT.write(luces);
+
+        } else if(comandoVoz.equals("apagar todas las luces") || comandoVoz.equals("Apagar todas las luces")) {
+            String luces = "L00000000";
+            cambiarEstadoCheked(false);
+            //Log.d("mensaje", "ninguna luz");
+            //MyConexionBT.write(luces);
+        } else if(comandoVoz.equals("abrir la puerta")) {
+            String luces = "P1";
+            cerradura.setText("Abierta");
+            //Log.d("mensaje", "abrir la puerta");
+            //MyConexionBT.write(luces);
+        } else {
+            int x = 0;
+            String[] accionAux = comandoVoz.split(" ");
+            String accion = accionAux[x];
+            if (accion.equals("encender")) {
+                String[] comandoAux = comandoVoz.split("encender la luz ");
+                for (int i = 0; i < comandoAux.length; i++) {
+                    String luces = comandoAux[i];
+                    String[] lucesAux = luces.split(" ");
+                    for (int j = 0; j < lucesAux.length; j++) {
+                        String s = lucesAux[j];
+                        cambiarSwitch(s,true);
+                    }
+                }
+            } else if(accion.equals("apagar")){
+                String[] comandoAux2 = comandoVoz.split("apagar la luz ");
+                for (int i = 0; i < comandoAux2.length; i++) {
+                    String luces = comandoAux2[i];
+                    String[] lucesAux = luces.split(" ");
+                    for (int j = 0; j < lucesAux.length; j++) {
+                        String s = lucesAux[j];
+                        cambiarSwitch(s,false);
+                    }
+                }
+            }
+            String luces = obtenerLucesEncendidas();
+            //MyConexionBT.write(luces);
+        }
+    }
+
+    private void cambiarSwitch(String luz, boolean flag) {
+        if ( !luz.equals("y")) {
+            switch (luz){
+                case "1":
+                case "uno":
+                    luz1.setChecked(flag);
+                    break;
+                case "2":
+                case "dos":
+                    luz2.setChecked(flag);
+                    break;
+                case "3":
+                case "tres":
+                    luz3.setChecked(flag);
+                    break;
+                case "4":
+                case "cuatro":
+                    luz4.setChecked(flag);
+                    break;
+                case "5":
+                case "cinco":
+                    luz5.setChecked(flag);
+                    break;
+                case "6":
+                case "seis":
+                    luz6.setChecked(flag);
+                    break;
+                case "7":
+                case "siete":
+                    luz7.setChecked(flag);
+                    break;
+                case "8":
+                case "ocho":
+                    luz8.setChecked(flag);
+                    break;
+            }
         }
     }
 }
