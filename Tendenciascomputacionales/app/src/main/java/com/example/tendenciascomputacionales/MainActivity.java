@@ -58,10 +58,15 @@ public class MainActivity extends AppCompatActivity {
     private ConnectedThread MyConexionBT;
     Button btConectarArduino, btDesconectarArduino;
 
+    InputStream mmInStream;
+    OutputStream mmOutStream;
+    String msg;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         //iniciar variables bt
         btAdapter = BluetoothAdapter.getDefaultAdapter();
         btConectarArduino = findViewById(R.id.btConectarArduino);
@@ -90,17 +95,17 @@ public class MainActivity extends AppCompatActivity {
         this.btLuces.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String luces = obtenerLucesEncendidas();
-                //MyConexionBT.write(luces);
+                //String luces = obtenerLucesEncendidas();
+                MyConexionBT.write("a");
             }
         });
 
         this.abrirPuerta.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String abrirPuerta = "P1";
+                //String abrirPuerta = "P1";
                 cerradura.setText("Abierta");
-                //MyConexionBT.write(abrirPuerta);
+                MyConexionBT.write("b");
             }
         });
 
@@ -223,8 +228,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private class ConnectedThread extends Thread {
-        private final InputStream mmInStream;
-        private final OutputStream mmOutStream;
+        //private final InputStream mmInStream;
+        //private final OutputStream mmOutStream;
 
         public ConnectedThread(BluetoothSocket socket) {
 
@@ -238,27 +243,43 @@ public class MainActivity extends AppCompatActivity {
             }
             mmInStream = tmpIn;
             mmOutStream = tmpOut;
+
         }
+
 
         public void run() {
             byte[] buffer = new byte[256];
             int bytes;
-
-            // Se mantiene en modo escucha para determinar el ingreso de datos
+            msg = "M";
             while (true) {
                 try {
-
                     bytes = mmInStream.read(buffer);
                     String readMessage = new String(buffer, 0, bytes);
-                    // Envia los datos obtenidos hacia el evento via handler
-                    grabar.setText(readMessage);
-                    bluetoothIn.obtainMessage(handlerState, bytes, -1, readMessage).sendToTarget();
-                    //bluetoothIn.obtainMessage();
+                    //bluetoothIn.obtainMessage(handlerState, bytes, -1, readMessage).sendToTarget();
+                    if (readMessage.equals("I")) {
+                        msg = msg + readMessage + ";";
+                    } else if (readMessage.equals("T")) {
+                        msg = msg + ";T";
+                        //Log.d("mensajeRecibido", msg);
+                        runOnUiThread(new Runnable() {
+                              @Override
+                              public void run() {
+                                  Log.d("mensajeRecibido",msg);
+                                  procesarStringRecibido(msg);
+                                  msg = "M";
+                              }
+                          });
+                        //procesarStringRecibido(msg);
+
+                    } else {
+                        msg = msg + readMessage;
+                    }
                 } catch (IOException e) {
                     break;
                 }
             }
         }
+
 
         //Envio de trama
         public void write(String input) {
@@ -387,6 +408,35 @@ public class MainActivity extends AppCompatActivity {
                 case "ocho":
                     luz8.setChecked(flag);
                     break;
+            }
+        }
+    }
+
+    private void procesarStringRecibido(String mensaje) {
+        String[] mensajeAux = mensaje.split(";");
+        int inicio=0;
+        int fin=6;
+        if (mensajeAux.length == 7 && mensajeAux[inicio].equals("MI") && mensajeAux[fin].equals("T")){
+            for (int i = 1; i < mensajeAux.length-1; i++) {
+                switch (i){
+                    case 1:
+                        this.temperatura.setText(mensajeAux[i]);
+                        break;
+                    case 2:
+                        this.humedad.setText(mensajeAux[i]);
+                        break;
+                    case 3:
+                        this.sensorLuminosidad.setText(mensajeAux[i]);
+                        break;
+                    case 4:
+                        String puerta = (mensajeAux[i].equals("1"))? "abierta" : "cerrada";
+                        this.cerradura.setText(puerta);
+                        break;
+                    case 5:
+                        String personaEnLaPuerta = (mensajeAux[i].equals("1"))? "Sí" : "No";
+                        this.personaPuerta.setText(personaEnLaPuerta);
+                        break;
+                }
             }
         }
     }
