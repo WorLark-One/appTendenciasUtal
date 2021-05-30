@@ -8,6 +8,7 @@ import android.bluetooth.BluetoothSocket;
 import android.content.ActivityNotFoundException;
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.content.Intent;
 import android.speech.RecognizerIntent;
@@ -23,7 +24,25 @@ import java.util.UUID;
 import android.os.Handler;
 
 public class MainActivity extends AppCompatActivity {
-    public TextView grabar, estadoArduino;
+    //variables
+    private TextView grabar;
+    private TextView temperatura;
+    private TextView humedad;
+    private Switch luz1;
+    private Switch luz2;
+    private Switch luz3;
+    private Switch luz4;
+    private Switch luz5;
+    private Switch luz6;
+    private Switch luz7;
+    private Switch luz8;
+    private Button btLuces;
+    private TextView sensorLuminosidad;
+    private TextView cerradura;
+    private TextView personaPuerta;
+    private Button abrirPuerta;
+
+    public TextView estadoArduino;
     private BluetoothAdapter btAdapter = null;
     private BluetoothSocket btSocket = null;
     public static String address = null;
@@ -39,17 +58,49 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        grabar = (TextView) findViewById(R.id.txtGrabarVoz);
+        //iniciar variables bt
         btAdapter = BluetoothAdapter.getDefaultAdapter();
         btConectarArduino = findViewById(R.id.btConectarArduino);
         btDesconectarArduino = findViewById(R.id.btDesconectarArduino);
         estadoArduino = (TextView) findViewById(R.id.estadoArduino);
+        //iniciar variables
+        this.grabar = (TextView) findViewById(R.id.txtGrabarVoz);
+        this.temperatura = (TextView) findViewById(R.id.temperatura);
+        this.humedad = (TextView) findViewById(R.id.humedad);
+        this.luz1 = (Switch) findViewById(R.id.luz1);
+        this.luz2 = (Switch) findViewById(R.id.luz2);
+        this.luz3 = (Switch) findViewById(R.id.luz3);
+        this.luz4 = (Switch) findViewById(R.id.luz4);
+        this.luz5 = (Switch) findViewById(R.id.luz5);
+        this.luz6 = (Switch) findViewById(R.id.luz6);
+        this.luz7 = (Switch) findViewById(R.id.luz7);
+        this.luz8 = (Switch) findViewById(R.id.luz8);
+        this.btLuces = (Button) findViewById(R.id.btLuces);
+        this.sensorLuminosidad = (TextView) findViewById(R.id.sensorLuminosidad);
+        this.cerradura = (TextView) findViewById(R.id.cerradura);
+        this.personaPuerta = (TextView) findViewById(R.id.personaPuerta);
+        this.abrirPuerta = (Button) findViewById(R.id.abrirPuerta);
+
+        this.btLuces.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                boolean [] luces = obtenerLucesEncendidas();
+
+            }
+        });
+
+        this.abrirPuerta.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //abrir puerta
+            }
+        });
 
         this.verificarEstadoBT();
 
         Set<BluetoothDevice> pairedDeveicesList = btAdapter.getBondedDevices();
         for(BluetoothDevice pairedDevice : pairedDeveicesList){
-            if(pairedDevice.getName().equals("HC-05")){
+            if(pairedDevice.getName().equals("DESKTOP-C5RQ24Q")){
                 address = pairedDevice.getAddress();
             }
         }
@@ -74,6 +125,19 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    private boolean[] obtenerLucesEncendidas (){
+        boolean [] luces= new boolean[8];
+        luces[0] = luz1.isChecked()? true : false;
+        luces[1] = luz2.isChecked()? true : false;
+        luces[2] = luz3.isChecked()? true : false;
+        luces[3] = luz4.isChecked()? true : false;
+        luces[4] = luz5.isChecked()? true : false;
+        luces[5] = luz6.isChecked()? true : false;
+        luces[6] = luz7.isChecked()? true : false;
+        luces[7] = luz8.isChecked()? true : false;
+        return luces;
     }
 
     private BluetoothSocket createBluetoothSocket (BluetoothDevice device) throws IOException {
@@ -150,7 +214,9 @@ public class MainActivity extends AppCompatActivity {
                     bytes = mmInStream.read(buffer);
                     String readMessage = new String(buffer, 0, bytes);
                     // Envia los datos obtenidos hacia el evento via handler
+                    grabar.setText(readMessage);
                     bluetoothIn.obtainMessage(handlerState, bytes, -1, readMessage).sendToTarget();
+                    //bluetoothIn.obtainMessage();
                 } catch (IOException e) {
                     break;
                 }
