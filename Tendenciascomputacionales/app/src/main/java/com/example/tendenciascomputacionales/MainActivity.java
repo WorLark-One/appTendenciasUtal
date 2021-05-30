@@ -85,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 boolean [] luces = obtenerLucesEncendidas();
-
+                MyConexionBT.write("a");
             }
         });
 
@@ -214,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
                     bytes = mmInStream.read(buffer);
                     String readMessage = new String(buffer, 0, bytes);
                     // Envia los datos obtenidos hacia el evento via handler
-                    grabar.setText(readMessage);
+                    //grabar.setText(readMessage);
                     bluetoothIn.obtainMessage(handlerState, bytes, -1, readMessage).sendToTarget();
                     //bluetoothIn.obtainMessage();
                 } catch (IOException e) {
