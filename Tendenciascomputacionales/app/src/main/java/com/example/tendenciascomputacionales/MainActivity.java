@@ -95,17 +95,17 @@ public class MainActivity extends AppCompatActivity {
         this.btLuces.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //String luces = obtenerLucesEncendidas();
-                MyConexionBT.write("a");
+                String luces = obtenerLucesEncendidas();
+                MyConexionBT.write(luces);
             }
         });
 
         this.abrirPuerta.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //String abrirPuerta = "P1";
+                String abrirPuerta = "P1";
                 cerradura.setText("Abierta");
-                MyConexionBT.write("b");
+                MyConexionBT.write(abrirPuerta);
             }
         });
 
@@ -114,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String luces = "L00000000";
                 cambiarEstadoCheked(false);
-                //MyConexionBT.write(luces);
+                MyConexionBT.write(luces);
             }
         });
 
@@ -123,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String luces = "L11111111";
                 cambiarEstadoCheked(true);
-                //MyConexionBT.write(luces);
+                MyConexionBT.write(luces);
             }
         });
 
